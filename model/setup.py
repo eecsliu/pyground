@@ -2,10 +2,37 @@ from peewee import *
 
 db = SqliteDatabase('database.db') #find a better way to do this?
 
+class Version(Model):
+	id = BigIntegerField(primary_key=True) #primary key
+
+class VersionSuccessor(Model):
+	id = BigIntegerField(primary_key=True)
+	from_version_id = BigIntegerField() #references version(id)
+	to_version_id = BigIntegerField() #references version(id)
+	#constraint: version_successor_unique_endpoints = Unique (from_version_id, to_version_id)
+
+class Item(Model):
+	id = BigIntegerField(primary_key=True)
+
+class ItemTag(Model):
+	item_id = BigIntegerField() #references Item(id)
+	key = CharField()
+	value = CharField(null=True)
+	data_type1 = BigIntegerField()
+	data_type2 = CharField()
+	data_type3 = BooleanField()
+	#constraint item_tag_pkey Primary key (item_id, key)
+
+class VersionHistoryDag(Model):
+	item_id = BigIntegerField() #references item(id)
+	version_successor_id = BigIntegerField() #references version_successor(id)
+    # CONSTRAINT version_history_dag_pkey PRIMARY KEY (item_id, version_successor_id)
+
+
 class Edge(Model):
-	#item_id = BigIntegerField()
+	item_id = BigIntegerField(null=True)
 	#we are omitting item_id until I figure out what is happening
-	source_key = CharField()
+	source_key = CharField(unique=True)
 	from_node_id = BigIntegerField()
 	to_node_id = BigIntegerField()
 	name = CharField()
@@ -14,18 +41,24 @@ class Edge(Model):
 		database = db
 
 class EdgeVersion(Model):
-	#id = BigIntegerField()
+	id = BigIntegerField()
 	edge_id = BigIntegerField()
 	from_node_version_start_id = BigIntegerField()
 	from_node_version_end_id = BigIntegerField()
 	to_node_version_start_id = BigIntegerField()
 	to_node_version_end_id = BigIntegerField()
+	#not in actual ground model
+	reference = CharField(null=True)
+	reference_parameters = CharField(null=True)
+	tags = CharField(null=True)
+	structure_version_id = BigIntegerField()
+	parent_ids = BigIntegerField(null=True)
 
 	class Meta:
 		database = db
 
 class Graph(Model):
-	#item_id = BigIntegerField()
+	item_id = BigIntegerField()
 	source_key = CharField()
 	name = CharField()
 
@@ -34,7 +67,7 @@ class Graph(Model):
 
 class GraphVersion(Model):
 	id = BigIntegerField()
-	graph_id = BigIntegerField()
+	graph_id = BigIntegerField() #question about the implementation of this model
 
 	class Meta:
 		database = db
@@ -47,7 +80,7 @@ class Node(Model):
 	class Meta:
 		database = db
 
-class Nodeversion(Model):
+class NodeVersion(Model):
 	#id = BigIntegerField()
 	node_id = BigIntegerField()
 
