@@ -11,7 +11,7 @@ class PygroundClient(object):
 		# 	os.mkdir(self.path)
 		db = SqliteDatabase('database.db') #find a better way to do this?
 		db.connect()
-		db.create_tables([Edge, EdgeVersion])
+		db.create_tables([Edge, EdgeVersion, Node, Item])
 
 		# if not os.path.exists(self.path + 'next_id.txt'):
 		# 	with open(self.path + 'next_id.txt', 'w') as f:
@@ -37,7 +37,9 @@ class PygroundClient(object):
 
 	### EDGES ###
 	def create_edge(self,_source_key, _name, _from_node_id, _to_node_id, tags=None):
-		Edge.create(item_id=self._gen_id(), source_key=_source_key, from_node_id=_from_node_id, 
+		id = self._gen_id()
+		Item.create(id=id)
+		Edge.create(item_id=id, source_key=_source_key, from_node_id=_from_node_id, 
 			to_node_id=_to_node_id, name=_name)
 		#ignoring tags for now
 
@@ -69,8 +71,7 @@ class PygroundClient(object):
 		item.save() #check on this syntax
 
 	def get_edge(self, s_key):
-		item = Edge.select(Edge.source_key == s_key) #correct because source_key is unique
-		return item #check whether this needs to return a different object
+		return Edge.get(Edge.source_key == s_key) #correct because source_key is unique
 
 	def get_edge_latest_versions(self, source_key):
 		'''This is a naive implementation'''
@@ -80,18 +81,22 @@ class PygroundClient(object):
 
 
 		# return item
+		latest_versions = []
 		pass
 
 	def get_edge_history(self, source_key):
 		pass
 
 	def get_edge_version(self, id):
-		item = EdgeVersion.select(id=id) #this is problematic because you got rid of id...
-		return id
+		# item = EdgeVersion.select(id=id) #this is problematic because you got rid of id...
+		# return id
+		pass
 
 	### Graph Methods ###
-	def create_graph(self, source_key, name, tags=None):
-		Graph.create(source_key=source_key, name=name)
+	def create_graph(self, source_key, name="null", tags=None):
+		id = _gen_id
+		Item.create(id=id)
+		Graph.create(item_id=id, source_key=source_key, name=name)
 
 	def create_graph_version(self, graph_id, edge_version_ids, reference=None,
 							reference_parameters=None, tags=None,
@@ -99,7 +104,7 @@ class PygroundClient(object):
 		pass
 
 	def get_graph(self, source_key):
-		item = Graph.select(Graph.source_key==source_key)
+		return Graph.get(Graph.source_key==source_key)
 
 	def get_graph_latest_versions(self, source_key):
 		pass
@@ -111,8 +116,10 @@ class PygroundClient(object):
 		pass
 
 	### Node Methods ###
-	def create_node(self, source_key, name, tags=None):
-		Node.create(source_key=source_key, name=name)
+	def create_node(self, source_key, name='null', tags=None):
+		temp = self._gen_id()
+		Item.create(id=temp)
+		Node.create(item_id=temp, source_key=source_key, name=name)
 
 	def create_node_version(self, node_id,
 	                            reference=None,
@@ -123,8 +130,7 @@ class PygroundClient(object):
 		NodeVersion.create(node_id=node_id) #check on this because of all the additional information
 
 	def get_node(self, source_key):
-		item = Node.select(Node.source_key == source_key)
-		return item #check on this pls
+		return Node.select(Node.source_key == source_key)
 
 	def get_node_latest_versions(self, source_key):
 		pass
@@ -139,14 +145,16 @@ class PygroundClient(object):
 		pass
 
 	### Structure Methods ###
-	def create_structure(self, source_key, name, tags=None): #pls double check on this
-		Structure.create(source_key=source_key, name=name)
+	def create_structure(self, source_key, name="null", tags=None): #pls double check on this
+		id = _gen_id
+		Item.create(id=id)
+		Structure.create(item_id=id, source_key=source_key, name=name)
 
 	def create_structure_version(self, structure_id, attributes, parent_id=None):
-		StructureVersion.create(structure_id=structure_id)
+		# StructureVersion.create(structure_id=structure_id)
 
 	def get_structure(self, source_key):
-		pass
+		return Structure.get(Structure.source_key==source_key)
 
 	def get_structure_latest_versions(self, source_key):
 		pass
@@ -158,8 +166,10 @@ class PygroundClient(object):
 		pass
 
 	### Lineage Edge Methods ###
-	def create_lineage_edge(self, source_key, name, tags=None):
-		pass
+	def create_lineage_edge(self, source_key, name="null", tags=None):
+		id = _gen_id
+		Item.create(id=id)
+		LineageEdge.create(item_id=id, source_key=source_key, name=name)
 
 	def create_lineage_edge_version(self, edge_id,
 	                                    to_rich_version_id,
@@ -172,7 +182,7 @@ class PygroundClient(object):
 		pass
 
 	def get_lineage_edge(self, source_key):
-		pass
+		return LineageEdge.get(LineageEdge.source_key==source_key)
 
 	def get_lineage_edge_latest_versions(self, source_key):
 		pass
@@ -184,8 +194,10 @@ class PygroundClient(object):
 		pass
 
 	### Lineage Graph Methods ###
-	def create_lineage_graph(self, source_key, name, tags=None):
-		pass
+	def create_lineage_graph(self, source_key, name="null", tags=None):
+		id = _gen_id
+		Item.create(id=id)
+		LineageGraph.create(item_id=id, source_key=source_key, name=name)
 
 	def create_lineage_graph_version(self, lineage_graph_id,
 	                                     lineage_edge_version_ids,
@@ -197,7 +209,7 @@ class PygroundClient(object):
 		pass
 
 	def get_lineage_graph(self, source_key):
-		pass
+		return LineageGraph.get(LineageGraph.source_key==source_key)
 
 	def get_lineage_graph_latest_versions(self, source_key):
 		pass

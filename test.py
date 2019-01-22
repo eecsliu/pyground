@@ -10,17 +10,23 @@ class Test(object):
 # origin = os.getcwd()
 # os.chdir(os.path.expanduser("~"))
 client = PygroundClient()
-print(Edge.table_exists())
-client.create_edge("test1", "name1", 2, 3)
-# print(Edge.select(Edge.name == 'name1'))
-print()
-print()
-for edge in Edge.select():
-	print(str(edge.item_id) + ', ' + edge.source_key + ', ' + edge.name + ', ' + 
-		str(edge.from_node_id) + ', ' + str(edge.to_node_id))
+print("nodes")
+client.create_node("test1", "name1")
+client.create_node("test2", "name2")
+for node in Node.select():
+	print(str(node.item_id) + ', ' + node.source_key + ', ' + node.name)
 
-client.create_edge_version(edge.item_id, 1, 2)
+print("edges")
+client.create_edge("edge1", "edge1", 0, 1)
+edge = client.get_edge("edge1")
+# print(edge.item_id)
+# print(edge.source_key)
+# print(edge.name)
+# print(edge.from_node_id)
+# print(edge.to_node_id)
+# for edge in e:
+# 	print(str(edge.item_id) + ', ' + edge.source_key + ', ' + edge.name)
+# 	print(edge.from_node_id)
+# 	print(edge.to_node_id)
 
-for edge in EdgeVersion.select():
-	print(str(edge.id) + ', ' + str(edge.edge_id) + ', ' + str(edge.structure_version_id) + ', ' + 
-		str(edge.from_node_version_start_id) + ', ' + str(edge.to_node_version_end_id))
+print("graph")
