@@ -38,12 +38,12 @@ class ItemTag(Model):
 		primary_key = CompositeKey('item_id', 'key') #item_tag_pkey
 		database = db
 
-class VersionHistoryDag(Model):
-	item_id = ForeignKeyField(Item) #BigIntegerField() #references item(id)
+class VersionHistoryDag(Item):
+	# item_id = ForeignKeyField(Item) #BigIntegerField() #references item(id)
 	version_successor_id = ForeignKeyField(VersionSuccessor, to_field='id') #references version_successor(id)
 
 	class Meta:
-		primary_key = CompositeKey('item_id', 'version_successor_id') #version_history_dag_pkey
+		primary_key = CompositeKey('id', 'version_successor_id') #version_history_dag_pkey
 		database = db
 
 ### Models ###
