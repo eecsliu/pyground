@@ -91,7 +91,7 @@ class PygroundClient(object):
 		pass
 
 	def get_edge_version(self, id):
-		pass
+		return EdgeVersion.get(EdgeVersion.id == id)
 
 	### Graph Methods ###
 	def create_graph(self, source_key, name="null", tags=None):
@@ -117,7 +117,7 @@ class PygroundClient(object):
 		pass
 
 	def get_graph_version(self, id):
-		pass
+		return GraphVersion.get(GraphVersion.id == id)
 
 	### Node Methods ###
 	def create_node(self, source_key, name='null', tags=None):
@@ -174,7 +174,7 @@ class PygroundClient(object):
 		pass
 
 	def get_structure_version(self, id):
-		pass
+		return StructureVersion.get(StructureVersion.id == id)
 
 	### Lineage Edge Methods ###
 	def create_lineage_edge(self, source_key, name="null", tags=None):
@@ -205,7 +205,7 @@ class PygroundClient(object):
 		pass
 
 	def get_lineage_edge_Version(self, id):
-		pass
+		return LineageEdgeVersion.get(LineageEdgeVersion.id == id)
 
 	### Lineage Graph Methods ###
 	def create_lineage_graph(self, source_key, name="null", tags=None):
@@ -235,4 +235,4 @@ class PygroundClient(object):
 		pass
 
 	def get_lineage_graph_version(self, id):
-		pass
+		return LineageGraphVersion.get(LineageGraphVersion.id == id)
