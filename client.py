@@ -11,7 +11,9 @@ class PygroundClient(object):
 		# 	os.mkdir(self.path)
 		db = SqliteDatabase('database.db') #find a better way to do this?
 		db.connect()
-		db.create_tables([Node, Item, NodeVersion])
+		db.create_tables([Item, ItemTag, Version, VersionSuccessor, VersionHistoryDag, Structure,
+			StructureVersion, RichVersion, Node, NodeVersion, Edge, EdgeVersion, Graph, 
+			GraphVersion, LineageEdge, LineageEdgeVersion, LineageGraph, LineageGraphVersion])
 
 		# if not os.path.exists(self.path + 'next_id.txt'):
 		# 	with open(self.path + 'next_id.txt', 'w') as f:
@@ -129,10 +131,20 @@ class PygroundClient(object):
 	                            tags=None,
 	                            structure_version_id=-1,
 	                            parent_ids=None):
-		NodeVersion.create(id=self._gen_id(), node_id=node_id) #check on this because of all the additional information
+		to_id = self._gen_id()
+		NodeVersion.create(id=to_id, node_id=node_id) #check on this because of all the additional information
+		if NodeVersion.select().where(NodeVersion.id == node_id):
+			v_id = self._gen_id()
+			test = VersionSuccessor.create(id=v_id, from_version_id=node_id, to_version_id=to_id)
+			print("inside create node version")
+			print(test.id)
+			print(test.from_version_id)
+			print(test.to_version_id)
+			print("exiting create node version")
+			VersionHistoryDag.create(id=self._gen_id(), version_successor_id=v_id)
 
 	def get_node(self, source_key):
-		return Node.select(Node.source_key == source_key)
+		return Node.get(Node.source_key == source_key)
 
 	def get_node_latest_versions(self, source_key):
 		latest_versions = []

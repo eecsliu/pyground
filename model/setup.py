@@ -43,7 +43,7 @@ class VersionHistoryDag(Item):
 	version_successor_id = ForeignKeyField(VersionSuccessor, to_field='id') #references version_successor(id)
 
 	class Meta:
-		primary_key = CompositeKey('id', 'version_successor_id') #version_history_dag_pkey
+		# primary_key = CompositeKey('id', 'version_successor_id') #version_history_dag_pkey
 		database = db
 
 ### Models ###
