@@ -15,18 +15,16 @@ class PygroundClient(object):
 			StructureVersion, RichVersion, Node, NodeVersion, Edge, EdgeVersion, Graph, 
 			GraphVersion, LineageEdge, LineageEdgeVersion, LineageGraph, LineageGraphVersion])
 
-		# if not os.path.exists(self.path + 'next_id.txt'):
-		# 	with open(self.path + 'next_id.txt', 'w') as f:
-		# 		f.write('0')
 		if not os.path.exists('next_id.txt'):
 			with open('next_id.txt', 'w') as f:
 				f.write('0')
-        # if not os.path.exists(self.path + 'index/' + 'index.json'):
-        #     with open(self.path + 'index/' + 'index.json', 'w') as f:
-        #         json.dump({}, f)
-        # if not os.path.exists(self.path + 'index/index_version.json'):
-        #     with open(self.path + 'index/index_version.json', 'w') as f:
-        #         json.dump({}, f)
+
+		self.edge_dag = self._gen_id()
+		self.graph_dag = self._gen_id()
+		self.node_dag = self._gen_id()
+		self.struct_dag = self._gen_id()
+		self.lin_edge_dag = self._gen_id()
+		self.lin_graph_dag = self._gen_id()
 
 	def _gen_id(self):
 		#borrowed from Grit
@@ -57,7 +55,7 @@ class PygroundClient(object):
 		while current != []:
 			id = current.pop()
 			query = VersionSuccessor.select().where(VersionSuccessor.from_version_id == id)
-			if !query.exists():
+			if not query.exists():
 				latest_versions.append(id)
 			else:
 				for v in query:
@@ -99,7 +97,7 @@ class PygroundClient(object):
 			for parent in parent_ids:
 				v_id = self._gen_id()
 				test = VersionSuccessor.create(id=v_id, from_version_id=parent, to_version_id=to_id)
-				VersionHistoryDag.create(id=self._gen_id(), version_successor_id=v_id)
+				VersionHistoryDag.create(id=self.edge_dag, version_successor_id=v_id)
 
 
 	def get_edge(self, s_key):
@@ -114,11 +112,18 @@ class PygroundClient(object):
 		for g in query:
 			current.append(g)
 
-		return _get_latest_versions()
+		return self._get_latest_versions()
 
 
 	def get_edge_history(self, source_key):
-		pass
+		pairs = []
+		identity = (Edge.get(Edge.source_key == source_key)).id
+		query = VersionSuccessor.select().where((VersionSuccessor.from_version_id == identity) | 
+			(VersionSuccessor.to_version_id == identity))
+		for v in query:
+			pairs.append(v.id)
+		return pairs
+
 
 	def get_edge_version(self, id):
 		return EdgeVersion.get(EdgeVersion.id == id)
@@ -137,7 +142,7 @@ class PygroundClient(object):
 			for parent in parent_ids:
 				v_id = self._gen_id()
 				test = VersionSuccessor.create(id=v_id, from_version_id=parent, to_version_id=to_id)
-				VersionHistoryDag.create(id=self._gen_id(), version_successor_id=v_id)
+				VersionHistoryDag.create(id=self.graph_dag, version_successor_id=v_id)
 
 	def get_graph(self, source_key):
 		return Graph.get(Graph.source_key==source_key)
@@ -151,10 +156,16 @@ class PygroundClient(object):
 		for g in query:
 			current.append(g)
 
-		return _get_latest_versions(current)
+		return self._get_latest_versions(current)
 
 	def get_graph_history(self, source_key):
-		pass
+		pairs = []
+		identity = (Graph.get(Graph.source_key == source_key)).id
+		query = VersionSuccessor.select().where((VersionSuccessor.from_version_id == identity) | 
+			(VersionSuccessor.to_version_id == identity))
+		for v in query:
+			pairs.append(v.id)
+		return pairs
 
 	def get_graph_version(self, id):
 		return GraphVersion.get(GraphVersion.id == id)
@@ -176,7 +187,7 @@ class PygroundClient(object):
 			for parent in parent_ids:
 				v_id = self._gen_id()
 				test = VersionSuccessor.create(id=v_id, from_version_id=parent, to_version_id=to_id)
-				VersionHistoryDag.create(id=self._gen_id(), version_successor_id=v_id)
+				VersionHistoryDag.create(id=self.node_dag, version_successor_id=v_id)
 
 	def get_node(self, source_key):
 		return Node.get(Node.source_key == source_key)
@@ -190,10 +201,16 @@ class PygroundClient(object):
 		for node in query:
 			current.append(node.id)
 
-		return _get_latest_versions(current)
+		return self._get_latest_versions(current)
 
 	def get_node_history(self, source_key):
-		pass
+		pairs = []
+		identity = (Node.get(Node.source_key == source_key)).id
+		query = VersionSuccessor.select().where((VersionSuccessor.from_version_id == identity) | 
+			(VersionSuccessor.to_version_id == identity))
+		for v in query:
+			pairs.append(v.id)
+		return pairs
 
 	def get_node_version(self, id):
 		return NodeVersion.get(NodeVersion.id == id)
@@ -212,7 +229,7 @@ class PygroundClient(object):
 		if parent_id:
 			v_id = self._gen_id()
 			test = VersionSuccessor.create(id=v_id, from_version_id=parent_id, to_version_id=to_id)
-			VersionHistoryDag.create(id=self._gen_id(), version_successor_id=v_id)
+			VersionHistoryDag.create(id=self.struct_dag, version_successor_id=v_id)
 
 	def get_structure(self, source_key):
 		return Structure.get(Structure.source_key==source_key)
@@ -226,7 +243,13 @@ class PygroundClient(object):
 		return latest_versions
 
 	def get_structure_history(self, source_key):
-		pass
+		pairs = []
+		identity = (Structure.get(Structure.source_key == source_key)).id
+		query = VersionSuccessor.select().where((VersionSuccessor.from_version_id == identity) | 
+			(VersionSuccessor.to_version_id == identity))
+		for v in query:
+			pairs.append(v.id)
+		return pairs
 
 	def get_structure_version(self, id):
 		return StructureVersion.get(StructureVersion.id == id)
@@ -251,21 +274,29 @@ class PygroundClient(object):
 		if parent_ids:
 			v_id = self._gen_id()
 			test = VersionSuccessor.create(id=v_id, from_version_id=parent_ids, to_version_id=to_id)
-			VersionHistoryDag.create(id=self._gen_id(), version_successor_id=v_id)
+			VersionHistoryDag.create(id=self.lin_edge_dag, version_successor_id=v_id)
 
 	def get_lineage_edge(self, source_key):
 		return LineageEdge.get(LineageEdge.source_key==source_key)
 
 	def get_lineage_edge_latest_versions(self, source_key):
-		latest_versions = []
+		current = []
 		identity = (LineageEdge.get(LineageEdge.source_key == source_key)).id
-		for g in LineageEdgeVersion.select().where(LineageEdgeVersion.node_id == identity).order_by(
-			LineageEdgeVersion.id.desc()):
-			latest_versions.append(g)
-		return latest_versions
+		query = LineageEdgeVersion.select().where(LineageEdgeVersion.node_id == identity)
+		if not query.exists():
+			return current
+		for g in query:
+			current.append(g)
+		return self._get_latest_versions()
 
-	def get_lineage_edge_latest_versions(self, source_key):
-		pass
+	def get_lineage_edge_history(self, source_key):
+		pairs = []
+		identity = (LineageEdge.get(LineageEdge.source_key == source_key)).id
+		query = VersionSuccessor.select().where((VersionSuccessor.from_version_id == identity) | 
+			(VersionSuccessor.to_version_id == identity))
+		for v in query:
+			pairs.append(v.id)
+		return pairs
 
 	def get_lineage_edge_Version(self, id):
 		return LineageEdgeVersion.get(LineageEdgeVersion.id == id)
@@ -287,21 +318,29 @@ class PygroundClient(object):
 		if parent_ids:
 			v_id = self._gen_id()
 			test = VersionSuccessor.create(id=v_id, from_version_id=parent_ids, to_version_id=to_id)
-			VersionHistoryDag.create(id=self._gen_id(), version_successor_id=v_id)
+			VersionHistoryDag.create(id=self.lin_graph_dag, version_successor_id=v_id)
 
 	def get_lineage_graph(self, source_key):
 		return LineageGraph.get(LineageGraph.source_key==source_key)
 
 	def get_lineage_graph_latest_versions(self, source_key):
-		latest_versions = []
+		current = []
 		identity = (LineageGraph.get(LineageGraph.source_key == source_key)).id
-		for g in LineageGraphVersion.select().where(LineageGraphVersion.node_id == identity).order_by(
-			LineageGraphVersion.id.desc()):
-			latest_versions.append(g)
-		return latest_versions
+		query = LineageGraphVersion.select().where(LineageGraphVersion.node_id == identity)
+		if not query.exists():
+			return current
+		for g in query:
+			current.append(g)
+		return self._get_latest_versions()
 
 	def get_lineage_graph_history(self, source_key):
-		pass
+		pairs = []
+		identity = (LineageGraph.get(LineageGraph.source_key == source_key)).id
+		query = VersionSuccessor.select().where((VersionSuccessor.from_version_id == identity) | 
+			(VersionSuccessor.to_version_id == identity))
+		for v in query:
+			pairs.append(v.id)
+		return pairs
 
 	def get_lineage_graph_version(self, id):
 		return LineageGraphVersion.get(LineageGraphVersion.id == id)

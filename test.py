@@ -13,13 +13,13 @@ client = PygroundClient()
 print("nodes")
 client.create_node("test1", "name1")
 client.create_node("test2", "name2")
-for node in Node.select():
+for node in Node.select().where((Node.name == "name1") | (Node.name == "name2")):
 	print(str(node.id) + ', ' + node.source_key + ', ' + node.name)
 
-for item in Item.select():
-	print(item.id)
+# for item in Item.select():
+# 	print(item.id)
 
-print(RichVersion.select().exists())
+# print(RichVersion.select().exists())
 
 print("node versions")
 # client.create_node_version(0)
