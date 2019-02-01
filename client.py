@@ -216,7 +216,13 @@ class PygroundClient(object):
 		return NodeVersion.get(NodeVersion.id == id)
 
 	def get_node_version_adjacent_lineage(self, id):
-		pass
+		adjacent = []
+		query = LineageEdgeVersion.select().where((LineageEdgeVersion.from_rich_version_id == id) |
+			(LineageEdgeVersion.to_rich_version_id == id))
+		for e in query:
+			adjacent.append(e.id)
+
+		return adjacent
 
 	### Structure Methods ###
 	def create_structure(self, source_key, name="null", tags=None): #pls double check on this
