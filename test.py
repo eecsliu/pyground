@@ -19,25 +19,27 @@ for node in Node.select():
 for item in Item.select():
 	print(item.id)
 
+print(RichVersion.select().exists())
+
 print("node versions")
-client.create_node_version(0)
-client.create_node_version(2)
-identity = (Node.get(Node.source_key == "test1")).id
-print(identity)
-for node in NodeVersion.select().where(NodeVersion.node_id == identity).order_by(NodeVersion.id.desc()):
-	print(str(node.id) + ', ' + str(node.node_id))
+# client.create_node_version(0)
+# client.create_node_version(2)
+# identity = (Node.get(Node.source_key == "test1")).id
+# print(identity)
+# for node in NodeVersion.select().where(NodeVersion.node_id == identity).order_by(NodeVersion.id.desc()):
+# 	print(str(node.id) + ', ' + str(node.node_id))
 
-print("checking version successor")
-for node in VersionSuccessor.select():
-	print(str(node.id) + ', ' + str(node.from_version_id))# + ', ' + str(node.to_version_id))
+# print("checking version successor")
+# for node in VersionSuccessor.select():
+# 	print(str(node.id) + ', ' + str(node.from_version_id))# + ', ' + str(node.to_version_id))
 
-print("checking DAG")
-for node in VersionHistoryDag.select():
-	print(str(node.id) + ', ' + str(node.version_successor_id))
+# print("checking DAG")
+# for node in VersionHistoryDag.select():
+# 	print(str(node.id) + ', ' + str(node.version_successor_id))
 
-print("test get")
-test = NodeVersion.select().where(NodeVersion.node_id == identity).order_by(NodeVersion.id.desc()).get()
-print(test.id)
+# print("test get")
+# test = NodeVersion.select().where(NodeVersion.node_id == identity).order_by(NodeVersion.id.desc()).get()
+# print(test.id)
 
 print("edges")
 # client.create_edge("edge1", "edge1", 0, 1)

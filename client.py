@@ -42,6 +42,29 @@ class PygroundClient(object):
 		Item.create(id=id)
 		return id
 
+	def _gen_version(self):
+		id = self._gen_id()
+		Version.create(id=id)
+		return id
+
+	def _gen_rich_version(self):
+		id = self._gen_version()
+		RichVersion.create(id=id)
+		return id
+
+	def _get_latest_versions(self, current):
+		latest_versions = []
+		while current != []:
+			id = current.pop()
+			query = VersionSuccessor.select().where(VersionSuccessor.from_version_id == id)
+			if !query.exists():
+				latest_versions.append(id)
+			else:
+				for v in query:
+					if v.to_version_id not in current:
+						current.append(v.to_version_id)
+		return latest_versions
+
 	### EDGES ###
 	def create_edge(self,_source_key, _name, _from_node_id, _to_node_id, tags=None):
 		Edge.create(item_id=self._gen_item(), source_key=_source_key, from_node_id=_from_node_id, 
@@ -58,19 +81,13 @@ class PygroundClient(object):
 	                            tags=None,
 	                            structure_version_id=-1,
 	                            parent_ids=None):
-		id = self._gen_id()
-		Version.create(id=id) #unfinished
+		to_id = self._gen_rich_version()
 
-		item = EdgeVersion.create(id=self._gen_id(), edge_id=edge_id, 
+		item = EdgeVersion.create(id=id, edge_id=edge_id, 
 					from_node_version_start_id=from_node_version_start_id,
 					to_node_version_start_id=to_node_version_start_id,
 					to_node_version_end_id=0,
 					from_node_version_end_id=0,
-					reference=reference,
-					reference_parameters=reference_parameters,
-					tags=tags,
-					structure_version_id=structure_version_id,
-					parent_ids=parent_ids
 					)
 		if to_node_version_end_id > 0:
 			item.to_node_version_end_id = to_node_version_end_id
@@ -78,16 +95,27 @@ class PygroundClient(object):
 			item.from_node_version_end_id = from_node_version_end_id
 		item.save() #check on this syntax
 
+		if parent_ids:
+			for parent in parent_ids:
+				v_id = self._gen_id()
+				test = VersionSuccessor.create(id=v_id, from_version_id=parent, to_version_id=to_id)
+				VersionHistoryDag.create(id=self._gen_id(), version_successor_id=v_id)
+
+
 	def get_edge(self, s_key):
 		return Edge.get(Edge.source_key == s_key) #correct because source_key is unique
 
 	def get_edge_latest_versions(self, source_key):
-		latest_versions = []
+		current = []
 		identity = (Edge.get(Edge.source_key == source_key)).id
-		for g in EdgeVersion.select().where(EdgeVersion.node_id == identity).order_by(
-			EdgeVersion.id.desc()):
-			latest_versions.append(g)
-		return latest_versions
+		query = EdgeVersion.select().where(EdgeVersion.node_id == identity)
+		if not query.exists():
+			return current
+		for g in query:
+			current.append(g)
+
+		return _get_latest_versions()
+
 
 	def get_edge_history(self, source_key):
 		pass
@@ -102,18 +130,28 @@ class PygroundClient(object):
 	def create_graph_version(self, graph_id, edge_version_ids, reference=None,
 							reference_parameters=None, tags=None,
 							structure_version_id=-1, parent_ids=None):
-		pass
+		to_id = self._gen_rich_version()
+		GraphVersion.create(id=id, graph_id=graph_id)
+
+		if parent_ids:
+			for parent in parent_ids:
+				v_id = self._gen_id()
+				test = VersionSuccessor.create(id=v_id, from_version_id=parent, to_version_id=to_id)
+				VersionHistoryDag.create(id=self._gen_id(), version_successor_id=v_id)
 
 	def get_graph(self, source_key):
 		return Graph.get(Graph.source_key==source_key)
 
 	def get_graph_latest_versions(self, source_key):
-		latest_versions = []
+		current = []
 		identity = (Graph.get(Graph.source_key == source_key)).id
-		for g in GraphVersion.select().where(GraphVersion.node_id == identity).order_by(
-			GraphVersion.id.desc()):
-			latest_versions.append(g)
-		return latest_versions
+		query = GraphVersion.select().where(GraphVersion.node_id == identity)
+		if not query.exists():
+			return current
+		for g in query:
+			current.append(g)
+
+		return _get_latest_versions(current)
 
 	def get_graph_history(self, source_key):
 		pass
@@ -123,7 +161,7 @@ class PygroundClient(object):
 
 	### Node Methods ###
 	def create_node(self, source_key, name='null', tags=None):
-		Node.create(id=self._gen_id(), source_key=source_key, name=name)
+		Node.create(item_id=self._gen_item(), source_key=source_key, name=name)
 
 	def create_node_version(self, node_id,
 	                            reference=None,
@@ -131,28 +169,28 @@ class PygroundClient(object):
 	                            tags=None,
 	                            structure_version_id=-1,
 	                            parent_ids=None):
-		to_id = self._gen_id()
-		NodeVersion.create(id=to_id, node_id=node_id) #check on this because of all the additional information
-		if NodeVersion.select().where(NodeVersion.id == node_id):
-			v_id = self._gen_id()
-			test = VersionSuccessor.create(id=v_id, from_version_id=node_id, to_version_id=to_id)
-			print("inside create node version")
-			print(test.id)
-			print(test.from_version_id)
-			print(test.to_version_id)
-			print("exiting create node version")
-			VersionHistoryDag.create(id=self._gen_id(), version_successor_id=v_id)
+		to_id = self._gen_rich_version()
+		NodeVersion.create(id=to_id, node_id=node_id) 
+
+		if parent_ids:
+			for parent in parent_ids:
+				v_id = self._gen_id()
+				test = VersionSuccessor.create(id=v_id, from_version_id=parent, to_version_id=to_id)
+				VersionHistoryDag.create(id=self._gen_id(), version_successor_id=v_id)
 
 	def get_node(self, source_key):
 		return Node.get(Node.source_key == source_key)
 
 	def get_node_latest_versions(self, source_key):
-		latest_versions = []
+		current = []
 		identity = (Node.get(Node.source_key == source_key)).id
-		for node in NodeVersion.select().where(NodeVersion.node_id == identity).order_by(
-			NodeVersion.id.desc()):
-			latest_versions.append(node)
-		return latest_versions
+		query = NodeVersion.select().where(NodeVersion.node_id == identity)
+		if not query.exists():
+			return current
+		for node in query:
+			current.append(node.id)
+
+		return _get_latest_versions(current)
 
 	def get_node_history(self, source_key):
 		pass
@@ -168,8 +206,13 @@ class PygroundClient(object):
 		Structure.create(item_id=self._gen_item(), source_key=source_key, name=name)
 
 	def create_structure_version(self, structure_id, attributes, parent_id=None):
-		# StructureVersion.create(structure_id=structure_id)
-		pass
+		to_id = self._gen_version()
+		StructureVersion.create(id = to_id, structure_id = structure_id)
+
+		if parent_id:
+			v_id = self._gen_id()
+			test = VersionSuccessor.create(id=v_id, from_version_id=parent_id, to_version_id=to_id)
+			VersionHistoryDag.create(id=self._gen_id(), version_successor_id=v_id)
 
 	def get_structure(self, source_key):
 		return Structure.get(Structure.source_key==source_key)
@@ -200,7 +243,15 @@ class PygroundClient(object):
 	                                    tags=None,
 	                                    structure_version_id=-1,
 	                                    parent_ids=None):
-		pass
+		to_id = self._gen_rich_version()
+		LineageEdgeVersion.create(id = id, lineage_edge_id = edge_id, 
+			from_rich_version_id = from_rich_version_id,
+			to_rich_version_id=to_rich_version_id)
+
+		if parent_ids:
+			v_id = self._gen_id()
+			test = VersionSuccessor.create(id=v_id, from_version_id=parent_ids, to_version_id=to_id)
+			VersionHistoryDag.create(id=self._gen_id(), version_successor_id=v_id)
 
 	def get_lineage_edge(self, source_key):
 		return LineageEdge.get(LineageEdge.source_key==source_key)
@@ -230,7 +281,13 @@ class PygroundClient(object):
 	                                     tags=None,
 	                                     structure_version_id=-1,
 	                                     parent_ids=None):
-		pass
+		to_id = self._gen_rich_version()
+		LineageGraphVersion.create(id = id, lineage_graph_id = lineage_graph_id)
+
+		if parent_ids:
+			v_id = self._gen_id()
+			test = VersionSuccessor.create(id=v_id, from_version_id=parent_ids, to_version_id=to_id)
+			VersionHistoryDag.create(id=self._gen_id(), version_successor_id=v_id)
 
 	def get_lineage_graph(self, source_key):
 		return LineageGraph.get(LineageGraph.source_key==source_key)
