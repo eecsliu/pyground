@@ -147,12 +147,6 @@ class EdgeVersion(Model):
 	from_node_version_end_id = ForeignKeyField(NodeVersion, to_field='id', null=True)
 	to_node_version_start_id = ForeignKeyField(NodeVersion, to_field='id')
 	to_node_version_end_id = ForeignKeyField(NodeVersion, to_field='id', null=True) #all reference node_version(id)
-	#not in actual ground model
-	# reference = CharField(null=True)
-	# reference_parameters = CharField(null=True)
-	# tags = CharField(null=True)
-	# structure_version_id = BigIntegerField()
-	# parent_ids = BigIntegerField(null=True)
 
 	class Meta:
 		database = db
